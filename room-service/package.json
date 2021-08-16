@@ -1,0 +1,48 @@
+{
+  "name": "room-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watchAll --no-cache",
+    "test:coverage": "jest --coverage",
+    "dev": "ts-node -r ts-node/register/transpile-only -r tsconfig-paths/register src/index.ts",
+    "start": "ts-node dist/index.js",
+    "build": "tsc -p tsconfig.prod.json"
+  },
+  "keywords": [],
+  "author": "devdezyn.io",
+  "license": "ISC",
+  "dependencies": {
+    "@devdezyn/hospitality-app-common": "^1.0.26",
+    "avsc": "^5.7.2",
+    "chalk": "^4.1.2",
+    "compression": "^1.7.4",
+    "cookie-session": "^1.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-async-errors": "^3.1.1",
+    "helmet": "^4.6.0",
+    "kafkajs": "^1.15.0",
+    "mongoose": "^5.13.5"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.1",
+    "@types/cookie-session": "^2.0.43",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/jest": "^26.0.24",
+    "@types/jsonwebtoken": "^8.5.4",
+    "@types/node": "^16.6.1",
+    "@types/supertest": "^2.0.11",
+    "jest": "^27.0.6",
+    "mongodb-memory-server": "^7.3.6",
+    "supertest": "^6.1.5",
+    "ts-jest": "^27.0.4",
+    "ts-node": "^10.2.0",
+    "tsconfig-paths": "^3.10.1",
+    "typescript": "^4.3.5"
+  }
+}

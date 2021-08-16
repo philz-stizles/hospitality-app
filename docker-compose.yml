@@ -1,0 +1,188 @@
+version: '3.7'
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    ports:
+      - '2181:2181'
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka:
+    image: bitnami/kafka:latest
+    # container_name: kafka
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_DELETE_TOPIC_ENABLE=true
+      # - KAFKA_LISTENERS=PLAINTEXT://:9092
+      # - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      # KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      # KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    links:
+      - zookeeper
+    depends_on:
+      - zookeeper
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+  #   # container_name: es01
+  #   environment:
+  #     # - node.name=elasticsearch
+  #     - cluster.name=es-docker-cluster
+  #     # - xpack.security.enabled=false
+  #     - discovery.type=single-node
+  #     # - discovery.seed_hosts=es02,es03
+  #     # - cluster.initial_master_nodes=es01
+  #     - bootstrap.memory_lock=true
+  #     - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #     nofile:
+  #       soft: 65536
+  #       hard: 65536
+  #   cap_add:
+  #     - IPC_LOCK
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  #   ports:
+  #     - 9200:9200
+  #   networks:
+  #     - elastic
+  # kibana:
+  #   # container_name: kibana
+  #   image: docker.elastic.co/kibana/kibana:7.4.0
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   networks:
+  #     - elastic
+  #   ports:
+  #     - 5601:5601
+  #   depends_on:
+  #     - elasticsearch
+  auth-service:
+    container_name: auth-service
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev # The name of the docker config file
+      context: ./auth-service # Where the docker config file is located
+    volumes:
+      # - /app/node_modules
+      - ./auth-service:/app
+    ports:
+      - '3001:3000'
+    links:
+      - mongo
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/auth-service-db
+      - JWT_AUTH_SECRET=nh7dd4456vhbgkjvdDWQZXMKOY6FDEAmkbZMOPI
+      - KAFKA_CLIENT_ID=auth
+      - KAFKA_BROKERS=["kafka:9092"]
+  user-service:
+    container_name: user-service
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev # The name of the docker config file
+      context: ./user-service # Where the docker config file is located
+    volumes:
+      # - /app/node_modules
+      - ./user-service:/app
+    ports:
+      - '3002:3000'
+    links:
+      - mongo
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/user-service-db
+      - JWT_AUTH_SECRET=nh7dd4456vhbgkjvdDWQZXMKOY6FDEAmkbZMOPI
+      - KAFKA_CLIENT_ID=room
+      - KAFKA_BROKERS=["kafka:9092"]
+  room-service:
+    container_name: room-service
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev # The name of the docker config file
+      context: ./room-service # Where the docker config file is located
+    volumes:
+      # - /app/node_modules
+      - ./room-service:/app
+    ports:
+      - '3002:3000'
+    links:
+      - mongo
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/room-service-db
+      - JWT_AUTH_SECRET=nh7dd4456vhbgkjvdDWQZXMKOY6FDEAmkbZMOPI
+      - KAFKA_CLIENT_ID=room
+      - KAFKA_BROKERS=["kafka:9092"]
+  reservation-service:
+    container_name: reservation-service
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev # The name of the docker config file
+      context: ./reservation-service # Where the docker config file is located
+    volumes:
+      # - /app/node_modules
+      - ./reservation-service:/app
+    ports:
+      - '3003:3000'
+    links:
+      - mongo
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/reservation-service-db
+      - JWT_AUTH_SECRET=nh7dd4456vhbgkjvdDWQZXMKOY6FDEAmkbZMOPI
+      - KAFKA_CLIENT_ID=reservation
+      - KAFKA_BROKERS=["kafka:9092"]
+  client:
+    container_name: client
+    image: devdezyn/hospitality-app-client
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev # The name of the docker config file
+      context: ./client # Where the docker config file is located
+    volumes:
+      # - /app/node_modules
+      - ./client:/usr/app
+    ports:
+      - '8080:3000'
+    depends_on:
+      - auth-service
+      - room-service
+      - reservation-service
+  mongo:
+    image: mongo
+    volumes:
+      - ./db:/data/db
+    ports:
+      - '27017:27017'
+  redis:
+    image: redis
+# networks:
+#   elastic:
+#     driver: bridge
+# volumes:
+#   elasticsearch-data:
+#     driver: local

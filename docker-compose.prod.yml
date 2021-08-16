@@ -1,0 +1,57 @@
+version: '3.7'
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN: yes
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    ports:
+      - '9092:9092'
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092
+      # KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      # KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      ALLOW_PLAINTEXT_LISTENER: yes
+    depends_on:
+      - zookeeper
+  hospitality-system:
+    container_name: hospitality-system
+    restart: always
+    build:
+      dockerfile: Dockerfile # The name of the docker config file
+      context: ./ # Where the docker config file is located
+    # volumes:
+    #   # - /app/node_modules
+    #   - ./:/app
+    ports:
+      - '3000:80'
+    links:
+      - mongo
+    environment:
+      - PORT=80
+      - MONGODB_URI=mongodb://mongo:27017/HospitalityDevDB
+      - JWT_AUTH_SECRET=nh7dd4456vhbgkjvdDWQZXMKOY6FDEAmkbZMOPI
+  hospitality-client:
+    container_name: hospitality-client
+    image: devdezyn/hospitality-client
+    restart: always
+    build:
+      dockerfile: Dockerfile # The name of the docker config file
+      context: ./hospitality-client # Where the docker config file is located
+    ports:
+      - '8080:80'
+  mongo:
+    container_name: mongo
+    image: mongo
+    restart: always
+    volumes:
+      - ./db:/data/db
+    ports:
+      - '27017:27017'

@@ -1,0 +1,8 @@
+[
+  {
+    "fullname": "Admin User",
+    "email": "admin@carbon.io",
+    "password": "p@ssw0rd",
+    "roles": ["admin"]
+  }
+]
